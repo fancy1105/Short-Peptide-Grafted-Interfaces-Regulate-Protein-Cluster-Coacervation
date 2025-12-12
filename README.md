@@ -13,5 +13,9 @@ ALL simulations were performed Using 3-cluster configuration as the initial conf
 ### 2.Mobile grafted-peptide system
 ### 3.Data analyse
 
-
+# The correspondence between the number of grafted-peptides and surface coverage(molecules/μm²)
+150  ------  416(molecules/μm²)
+300  ------  833(molecules/μm²)
+400  ------  1111(molecules/μm²)
+600  ------  1666(molecules/μm²)
 
