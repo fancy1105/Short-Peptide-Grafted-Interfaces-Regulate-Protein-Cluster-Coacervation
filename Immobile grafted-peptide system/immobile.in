@@ -1,0 +1,84 @@
+variable myRun equal 200000000
+variable myTimesteps equal 200000000
+dimension         3
+boundary          p p f
+units             nano
+atom_style        bond
+
+comm_style tiled
+comm_modify    vel yes  cutoff 11.75
+
+read_data     fus_grafted_peptides_150.data
+
+bond_style        harmonic
+bond_coeff        1 4.095 4.5
+
+#1-a 
+#2-b
+#3-spacer
+#4-c
+#5-spacer
+#6-surface-grafted bead
+
+
+pair_style         hybrid/overlay   lj/cut/soft 1  1  5  soft  2
+pair_coeff 1 1 lj/cut/soft 0.621 3.5 0.68
+pair_coeff 2 2 lj/cut/soft 0.621 3.5 0.68
+pair_coeff 1 2 soft -20.7 2
+pair_coeff 1 3 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 2 3 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 1 4 soft -20.7 2
+pair_coeff 1 5 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 1 6 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 2 4 lj/cut/soft 0.621 3.5 0.68
+pair_coeff 2 5 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 2 6 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 3 3 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 3 4 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 3 5 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 3 6 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 4 4 lj/cut/soft 0.621 3.5 0.68
+pair_coeff 4 5 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 4 6 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 5 5 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 5 6 lj/cut/soft 0.00001 3.5 0.68
+pair_coeff 6 6 lj/cut/soft 0.00001 3.5 0.68
+pair_modify shift yes
+special_bonds lj/coul 1.0 1.0 1.0
+
+group fus_a type 1 
+group fus_b type 2
+group fus_spacer type 3
+group surface_c type 4
+group surface_spacer type 5
+group surface_grafted_bead type 6
+
+group fus union fus_a fus_b fus_spacer
+group surface_mol union surface_c surface_spacer surface_grafted_bead
+group protein union fus_a fus_b fus_spacer surface_c surface_grafted_bead 
+
+
+neighbor         2 bin
+neigh_modify      every 10 delay 0 
+
+timestep          2.5
+thermo            10000
+thermo_style   custom step temp pe etotal press vol density spcpu
+
+reset_timestep  0
+
+fix             1 all nve
+fix             2 all langevin 300  300  125.0   48279 
+velocity     surface_grafted_bead  set  0 0 0
+fix             3  surface_grafted_bead setforce 0 0 0
+fix             4  all  wall/lj126     zlo  0  0.621  3.5  5
+fix             5  all  wall/lj126    zhi  230  0.621  3.5  5
+fix 		 6  all  balance 1000 1.2 rcb
+
+dump              1 all custom 1000000 dump1.${myTimesteps}.lammpstrj id mol type x y z
+
+dump_modify  1 sort id
+
+log             ${myTimesteps}.log
+run               ${myRun}  
+write_restart     fus_grafted_peptides.restart         
